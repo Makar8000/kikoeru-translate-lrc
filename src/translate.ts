@@ -14,9 +14,7 @@ const SOURCE_LANG = Deno.env.get("SOURCE_LANG") as deepl.SourceLanguageCode;
 const TARGET_LANG = Deno.env.get("TARGET_LANG") as deepl.TargetLanguageCode;
 const DEEPL_API_KEY = Deno.env.get("DEEPL_API_KEY") ?? "";
 const UNICODE_LANGUAGES = ["zh", "ja", "ko"];
-const UNICODE_REGEX = UNICODE_LANGUAGES.includes(SOURCE_LANG?.toLowerCase())
-  ? /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/
-  : /./;
+const UNICODE_REGEX = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
 const translator: deepl.Translator = await getTranslator();
 
 const tlCache = new Map<string, deepl.TextResult>(Object.entries(fs.existsSync(CACHE_PATH) ? JSON.parse(Deno.readTextFileSync(CACHE_PATH)) : {}));
@@ -32,7 +30,7 @@ const translateFile = async (file: string) => {
   for (const idx in srtData) {
     // Parse line
     const text = (srtData[idx] as ContentCaption).text?.trim();
-    if (srtData[idx].type !== "caption" || !UNICODE_REGEX.test(text)) {
+    if (srtData[idx].type !== "caption" || !shouldTranslate(text)) {
       continue;
     }
 
@@ -82,7 +80,7 @@ const translateFile = async (file: string) => {
       updateEmptyTranslation(text, tlResult);
       continue;
     }
-    if (UNICODE_REGEX.test(tlText)) {
+    if (shouldTranslate(tlText, false)) {
       console.log(`Skipped due to result still containing untranslated characters: ${tlText}`);
       updateEmptyTranslation(text, tlResult);
       continue;
@@ -129,6 +127,13 @@ const backupAndWriteFile = (file: string, content: string) => {
 const updateEmptyTranslation = (key: string, value: deepl.TextResult) => {
   tlEmpty.set(key, value);
   Deno.writeTextFileSync(EMPTY_PATH, JSON.stringify(Object.fromEntries(tlEmpty), null, 2));
+};
+
+const shouldTranslate = (text: string, defaultIfNonUnicode: boolean = true): boolean => {
+  if (UNICODE_LANGUAGES.includes(SOURCE_LANG?.toLowerCase())) {
+    return UNICODE_REGEX.test(text);
+  }
+  return defaultIfNonUnicode;
 };
 
 async function getTranslator(): Promise<deepl.Translator> {
