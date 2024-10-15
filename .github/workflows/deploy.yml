@@ -30,18 +30,24 @@ jobs:
           mkdir artifact/output
           mkdir artifact/backup
           mkdir artifact/queue
+          touch artifact/output/.temp
+          touch artifact/backup/.temp
+          touch artifact/queue/.temp
           mv .env.template artifact/.env
           mv translate.exe artifact/
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: translate-lrc.zip
+          name: translate-lrc
           path: |
             artifact/
             artifact/output/
             artifact/backup/
             artifact/queue/
+            !artifact/output/.temp
+            !artifact/backup/.temp
+            !artifact/queue/.temp
           include-hidden-files: true
           if-no-files-found: error
           overwrite: true
