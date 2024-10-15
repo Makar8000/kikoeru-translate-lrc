@@ -4,6 +4,7 @@ vendor
 .env
 data
 artifact
+release
 
 queue/**
 !queue/**/.gitkeep

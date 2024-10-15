@@ -38,13 +38,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: translate-lrc
-          path: release/translate-lrc.zip
+          path: artifact/
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: startsWith(github.ref, 'refs/tags/')
         with:
           files: release/translate-lrc.zip
           name: ${{ steps.define-version.outputs.commit }}
           prerelease: false
-          tag_name:  ${{ steps.define-version.outputs.commit }}
