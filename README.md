@@ -21,7 +21,7 @@ To adjust the configuration, you will need to create a `.env` file in the same d
 - `BAK_PATH` - The location of the folder where you want a backup of your lyric/subtitle files to be stored. Defaults to `./backup` in the same directory if not provided.
 - `OUT_PATH` - The location of the folder where you want your translated lyric/subtitle files to be stored. The folder structure of the files will be the same structure as the `RJ_PATH` folder. Defaults to `./output` in the same directory if not provided.
 
-## Running locally
+## Running from source
 This project requires [deno](https://deno.com/) to run.
 
 1) `deno install`
