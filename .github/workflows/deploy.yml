@@ -30,9 +30,12 @@ jobs:
           mkdir artifact/output
           mkdir artifact/backup
           mkdir artifact/queue
-          Move-Item -Path .\.env.template -Destination .\artifact\.env
-          Move-Item -Path .\translate.exe -Destination .\artifact\translate.exe
-          Compress-Archive -Path .\artifact\* -DestinationPath .\release\translate-lrc.zip -Force
+          New-Item artifact\output\.translated-files-will-be-here
+          New-Item artifact\backup\.backup-of-files-will-be-here
+          New-Item artifact\queue\.place-files-to-translate-here
+          Move-Item -Path .env.template -Destination artifact\.env
+          Move-Item -Path translate.exe -Destination artifact\translate.exe
+          Compress-Archive -Path artifact\* -DestinationPath release\translate-lrc.zip -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
