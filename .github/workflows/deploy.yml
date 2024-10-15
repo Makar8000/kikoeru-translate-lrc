@@ -36,8 +36,12 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: translate-lrc
-          path: artifact/**
+          name: translate-lrc.zip
+          path: |
+            artifact/
+            artifact/output/
+            artifact/backup/
+            artifact/queue/
           include-hidden-files: true
           if-no-files-found: error
           overwrite: true
