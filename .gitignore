@@ -5,6 +5,7 @@ vendor
 data
 artifact
 release
+*.exe
 
 queue/**
 !queue/**/.gitkeep
