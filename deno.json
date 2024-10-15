@@ -1,10 +1,14 @@
 {
+  "version": "1.0.1",
   "tasks": {
     "translate": "deno run -ENWRS translate.ts",
     "compile": "deno compile -ENWRS translate.ts"
   },
   "fmt": {
-    "lineWidth": 150
+    "lineWidth": 150,
+    "include": [
+      "translate.ts"
+    ]
   },
   "vendor": true,
   "imports": {

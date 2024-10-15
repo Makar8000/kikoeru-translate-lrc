@@ -17,7 +17,7 @@ const UNICODE_LANGUAGES = ["zh", "ja", "ko"];
 const UNICODE_REGEX = UNICODE_LANGUAGES.includes(SOURCE_LANG?.toLowerCase())
   ? /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/
   : /./;
-const translator: deepl.Translator = getTranslator();
+const translator: deepl.Translator = await getTranslator();
 
 const tlCache = new Map<string, deepl.TextResult>(Object.entries(fs.existsSync(CACHE_PATH) ? JSON.parse(Deno.readTextFileSync(CACHE_PATH)) : {}));
 const tlEmpty = new Map<string, deepl.TextResult>();
@@ -131,15 +131,27 @@ const updateEmptyTranslation = (key: string, value: deepl.TextResult) => {
   Deno.writeTextFileSync(EMPTY_PATH, JSON.stringify(Object.fromEntries(tlEmpty), null, 2));
 };
 
-function getTranslator(): deepl.Translator {
+async function getTranslator(): Promise<deepl.Translator> {
   try {
-    return new deepl.Translator(DEEPL_API_KEY);
+    const translator = new deepl.Translator(DEEPL_API_KEY);
+    const usage = await translator.getUsage();
+    if (!usage.anyLimitReached()) {
+      return translator;
+    }
+
+    console.error("\x1b[31m%s\x1b[0m", "Translation limit exceeded.");
+    if (usage.character) {
+      console.error("\x1b[31m%s\x1b[0m", `Characters: ${usage.character.count} of ${usage.character.limit}`);
+    }
+    if (usage.document) {
+      console.error("\x1b[31m%s\x1b[0m", `Documents: ${usage.document.count} of ${usage.document.limit}`);
+    }
   } catch (e: unknown) {
     const error = e as Error;
     console.error("\x1b[31m%s\x1b[0m", `Error initializing translator: ${error.message}`);
     console.error("\x1b[31m%s\x1b[0m", "Please ensure you have provided a valid DEEPL_API_KEY in the .env file");
-    Deno.exit(1);
   }
+  Deno.exit(1);
 }
 
 const main = async () => {
