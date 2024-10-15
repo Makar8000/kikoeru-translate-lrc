@@ -1,0 +1,12 @@
+node_modules
+vendor
+.vscode
+.env
+data
+
+queue/**
+!queue/**/.gitkeep
+backup/**
+!backup/**/.gitkeep
+output/**
+!output/**/.gitkeep
