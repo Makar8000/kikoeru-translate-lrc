@@ -24,24 +24,27 @@ jobs:
         run: "deno task compile"
 
       - name: Create Artifact
-        shell: bash
         run: |
+          mkdir release
           mkdir artifact
           mkdir artifact/output
           mkdir artifact/backup
           mkdir artifact/queue
-          touch artifact/output/.translated-files-will-be-here
-          touch artifact/backup/.backup-of-files-will-be-here
-          touch artifact/queue/.place-files-to-translate-here
-          mv .env.template artifact/.env
-          mv translate.exe artifact/
+          Move-Item -Path .\.env.template -Destination .\artifact\.env
+          Move-Item -Path .\translate.exe -Destination .\artifact\translate.exe
+          Compress-Archive -Path .\artifact\* -DestinationPath .\release\translate-lrc.zip -Force
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: translate-lrc
-          path: |
-            artifact/
-          include-hidden-files: true
-          if-no-files-found: error
-          overwrite: true
+          path: release/translate-lrc.zip
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          files: release/translate-lrc.zip
+          name: ${{ steps.define-version.outputs.commit }}
+          prerelease: false
+          tag_name:  ${{ steps.define-version.outputs.commit }}
