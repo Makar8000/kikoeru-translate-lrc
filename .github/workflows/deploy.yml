@@ -30,9 +30,9 @@ jobs:
           mkdir artifact/output
           mkdir artifact/backup
           mkdir artifact/queue
-          touch artifact/output/.temp
-          touch artifact/backup/.temp
-          touch artifact/queue/.temp
+          touch artifact/output/.translated-files-will-be-here
+          touch artifact/backup/.backup-of-files-will-be-here
+          touch artifact/queue/.place-files-to-translate-here
           mv .env.template artifact/.env
           mv translate.exe artifact/
 
@@ -42,12 +42,6 @@ jobs:
           name: translate-lrc
           path: |
             artifact/
-            artifact/output/
-            artifact/backup/
-            artifact/queue/
-            !artifact/output/.temp
-            !artifact/backup/.temp
-            !artifact/queue/.temp
           include-hidden-files: true
           if-no-files-found: error
           overwrite: true
