@@ -1,0 +1,44 @@
+name: Deploy
+on:
+  push:
+    branches: main
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: windows-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v3
+
+      - name: Install Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Install Dependencies
+        run: "deno install"
+
+      - name: Compile Executable
+        run: "deno task compile"
+
+      - name: Create Artifact
+        shell: bash
+        run: |
+          mkdir artifact
+          mkdir artifact/output
+          mkdir artifact/backup
+          mkdir artifact/queue
+          mv .env.template artifact/.env
+          mv translate.exe artifact/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: translate-lrc
+          path: artifact/
+          include-hidden-files: true
+          if-no-files-found: error
+          compression-level: 0
+          overwrite: true

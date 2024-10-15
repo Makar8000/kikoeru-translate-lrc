@@ -3,6 +3,7 @@ vendor
 .vscode
 .env
 data
+artifact
 
 queue/**
 !queue/**/.gitkeep
