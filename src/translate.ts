@@ -156,44 +156,52 @@ const shouldTranslate = (text: string, defaultIfNonUnicode: boolean = true): boo
 };
 
 const validateTranslation = (oldText: string, tlResult: deepl.TextResult): boolean => {
-  const newText = tlResult.text?.trim() ?? "";
+  const logWarn = (reason: string) => {
+    console.warn(
+      COLORS.WARN,
+      `Skipped a translation for reason: ${reason}\nOriginal Text: ${oldText}\nTL Output: ${JSON.stringify(tlResult)}`,
+    );
+  };
 
-  // Validate detected source language
-  const detectedSourceLang = tlResult.detectedSourceLang?.toLowerCase() ?? "";
-  if (!detectedSourceLang.length) {
-    console.warn(COLORS.WARN, `Skipped due to invalid detectedSourceLang: ${JSON.stringify(tlResult)}`);
+  const isValid = (() => {
+    // Validate detected source language
+    const detectedSourceLang = tlResult.detectedSourceLang?.toLowerCase() ?? "";
+    if (!detectedSourceLang.length) {
+      logWarn("Invalid detectedSourceLang");
+      return false;
+    }
+    if (detectedSourceLang.startsWith(TARGET_LANG.substring(0, 2))) {
+      logWarn("Detected source lang is the same as target lang");
+      return false;
+    }
+    if (SOURCE_LANG && !detectedSourceLang.startsWith(SOURCE_LANG.substring(0, 2))) {
+      logWarn("Detected source lang does not match desired source lang");
+      return false;
+    }
+
+    // Validate translated text
+    const newText = tlResult.text?.trim() ?? "";
+    if (!newText.length) {
+      logWarn("Translated text is empty");
+      return false;
+    }
+    if (oldText === newText) {
+      logWarn("Translated text and untranslated text are the same");
+      return false;
+    }
+    if (shouldTranslate(newText, false)) {
+      logWarn("Translated text still contains untranslated characters");
+      return false;
+    }
+
+    return true;
+  })();
+
+  if (!isValid) {
     updateEmptyTranslation(oldText, tlResult);
-    return false;
-  }
-  if (detectedSourceLang.startsWith(TARGET_LANG.substring(0, 2))) {
-    console.warn(COLORS.WARN, `Skipped due to source lang being the same as target lang: ${JSON.stringify(tlResult)}`);
-    updateEmptyTranslation(oldText, tlResult);
-    return false;
-  }
-  if (SOURCE_LANG && !detectedSourceLang.startsWith(SOURCE_LANG.substring(0, 2))) {
-    console.warn(COLORS.WARN, `Skipped due to source lang not matching desired source lang: ${JSON.stringify(tlResult)}`);
-    updateEmptyTranslation(oldText, tlResult);
-    return false;
   }
 
-  // Validate translated text
-  if (!newText.length) {
-    console.warn(COLORS.WARN, `Skipped due to translation being empty: ${JSON.stringify(tlResult)}`);
-    updateEmptyTranslation(oldText, tlResult);
-    return false;
-  }
-  if (oldText === newText) {
-    console.warn(COLORS.WARN, `Skipped due to result being unchanged: ${newText}`);
-    updateEmptyTranslation(oldText, tlResult);
-    return false;
-  }
-  if (shouldTranslate(newText, false)) {
-    console.warn(COLORS.WARN, `Skipped due to result still containing untranslated characters: ${newText}`);
-    updateEmptyTranslation(oldText, tlResult);
-    return false;
-  }
-
-  return true;
+  return isValid;
 };
 
 async function getTranslator(): Promise<deepl.Translator> {
