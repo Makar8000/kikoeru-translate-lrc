@@ -20,77 +20,91 @@ const translator: deepl.Translator = await getTranslator();
 const tlCache = new Map<string, deepl.TextResult>(Object.entries(fs.existsSync(CACHE_PATH) ? JSON.parse(Deno.readTextFileSync(CACHE_PATH)) : {}));
 const tlEmpty = new Map<string, deepl.TextResult>();
 
-const translateFile = async (file: string) => {
+interface TLCaption extends ContentCaption {
+  source?: "cache" | "translated" | "untranslated";
+  detectedSourceLang?: deepl.SourceLanguageCode;
+  modified: boolean;
+}
+
+const translateCaptions = async (captions: TLCaption[]): Promise<TLCaption[]> => {
+  const toTranslate = captions.filter((c) => c.source === "untranslated");
+  if (!toTranslate.length) {
+    console.log("No lines to translate.");
+    return captions;
+  }
+
+  try {
+    // Translate lines
+    console.log(`Translating ${toTranslate.length} lines`);
+    const results = await translator.translateText(toTranslate.map((c) => c.text.trim()), SOURCE_LANG ?? null, TARGET_LANG ?? "en-US");
+    for (const idx in results) {
+      const tlResult = results[idx];
+      const oldText = toTranslate[idx].text.trim();
+      if (!validateTranslation(oldText, tlResult)) {
+        continue;
+      }
+
+      // If all validations passed, save result to cache
+      const newText = tlResult.text?.trim() ?? "";
+      tlCache.set(oldText, {
+        text: newText,
+        detectedSourceLang: tlResult.detectedSourceLang,
+      } as deepl.TextResult);
+
+      toTranslate[idx].source = "translated";
+      toTranslate[idx].detectedSourceLang = tlResult.detectedSourceLang;
+      toTranslate[idx].text = newText;
+      toTranslate[idx].modified = true;
+    }
+    console.log(`Finished translation resulting in ${toTranslate.filter((c) => c.source === "translated").length} valid translations`);
+  } catch (e) {
+    console.error(COLORS.ERROR, e);
+  }
+
+  toTranslate.forEach((caption) => {
+    const idx = captions.findIndex((c) => c.index === caption.index);
+    if (idx >= 0) {
+      captions[idx] = caption;
+    } else {
+      console.error(COLORS.ERROR, "Unable to find original caption for translated caption. Something went very wrong.");
+      console.error(COLORS.ERROR, JSON.stringify(caption));
+      console.error(COLORS.ERROR, JSON.stringify(captions));
+    }
+  });
+
+  return captions;
+};
+
+const translateFile = async (file: string): Promise<void> => {
   // Read file contents
   console.log(`\nReading ${file}`);
   const content = Deno.readTextFileSync(path.join(RJ_PATH, file));
   const format = path.extname(file).substring(1);
-  const srtData = subsrt.parse(content, { format, verbose: true });
-  let hasModifiications = false;
-  for (const idx in srtData) {
-    // Parse line
-    const text = (srtData[idx] as ContentCaption).text?.trim();
-    if (srtData[idx].type !== "caption" || !shouldTranslate(text)) {
-      continue;
+  const srtData: TLCaption[] = subsrt.parse(content, { format, verbose: true }).map((caption) => {
+    const tlCaption = caption as TLCaption;
+    tlCaption.modified = false;
+
+    const text = tlCaption.text?.trim();
+    if (tlCaption.type !== "caption" || !text?.length || !shouldTranslate(text)) {
+      return tlCaption;
     }
 
-    // Translate line
-    let tlResult = tlCache.get(text);
-    let fromCache = true;
-    if (!tlResult?.text?.length) {
-      try {
-        console.log(`Translating: ${text}`);
-        tlResult = await translator.translateText(text, SOURCE_LANG ?? null, TARGET_LANG ?? "en-US");
-        if (tlResult?.text?.trim()?.length) {
-          tlCache.set(text, {
-            text: tlResult.text.trim(),
-            detectedSourceLang: tlResult.detectedSourceLang,
-          } as deepl.TextResult);
-          fromCache = false;
-        }
-        console.log(`Result: ${tlResult?.text?.trim()}`);
-      } catch (e) {
-        console.error(e);
-        continue;
-      }
+    const fromCache = tlCache.get(text);
+    if (fromCache?.text?.length) {
+      tlCaption.source = "cache";
+      tlCaption.modified = tlCaption.text !== fromCache!.text;
+      tlCaption.text = fromCache!.text;
+      tlCaption.detectedSourceLang = fromCache!.detectedSourceLang;
+      return tlCaption;
     }
 
-    // Check detected source language
-    const tlText = tlResult?.text?.trim();
-    const detectedSourceLang = tlResult?.detectedSourceLang?.toLowerCase();
-    if (detectedSourceLang.startsWith(TARGET_LANG.substring(0, 2))) {
-      console.log(`Skipped due to source lang being the same as target lang: ${JSON.stringify(tlResult)}`);
-      updateEmptyTranslation(text, tlResult);
-      continue;
-    }
-    if (!fromCache && SOURCE_LANG && !detectedSourceLang.startsWith(SOURCE_LANG.substring(0, 2))) {
-      console.log(`Skipped due to source lang not matching desired source lang: ${JSON.stringify(tlResult)}`);
-      updateEmptyTranslation(text, tlResult);
-      continue;
-    }
+    tlCaption.source = "untranslated";
+    return tlCaption;
+  });
 
-    // Validate translated text
-    if (!tlText?.length) {
-      console.log(`Skipped due to translation being empty: ${JSON.stringify(tlResult)}`);
-      updateEmptyTranslation(text, tlResult);
-      continue;
-    }
-    if (tlText === text) {
-      console.log(`Skipped due to result being unchanged: ${text}`);
-      updateEmptyTranslation(text, tlResult);
-      continue;
-    }
-    if (shouldTranslate(tlText, false)) {
-      console.log(`Skipped due to result still containing untranslated characters: ${tlText}`);
-      updateEmptyTranslation(text, tlResult);
-      continue;
-    }
+  await translateCaptions(srtData);
 
-    // Update data with result
-    srtData[idx].text = tlText;
-    hasModifiications = true;
-  }
-
+  const hasModifiications = srtData.filter((c) => c.modified).length > 0;
   if (!hasModifiications) {
     console.log("No changes to file detected");
     return;
@@ -98,7 +112,7 @@ const translateFile = async (file: string) => {
 
   const translatedContents = subsrt.build(srtData, { format, verbose: true });
   backupAndWriteFile(file, translatedContents);
-  console.log(`Finished file ${file}`);
+  console.log(`Completed file ${file}`);
 };
 
 const backupAndWriteFile = (file: string, content: string) => {
@@ -136,6 +150,47 @@ const shouldTranslate = (text: string, defaultIfNonUnicode: boolean = true): boo
   return defaultIfNonUnicode;
 };
 
+const validateTranslation = (oldText: string, tlResult: deepl.TextResult): boolean => {
+  const newText = tlResult.text?.trim() ?? "";
+
+  // Validate detected source language
+  const detectedSourceLang = tlResult.detectedSourceLang?.toLowerCase() ?? "";
+  if (!detectedSourceLang.length) {
+    console.warn(COLORS.WARN, `Skipped due to invalid detectedSourceLang: ${JSON.stringify(tlResult)}`);
+    updateEmptyTranslation(oldText, tlResult);
+    return false;
+  }
+  if (detectedSourceLang.startsWith(TARGET_LANG.substring(0, 2))) {
+    console.warn(COLORS.WARN, `Skipped due to source lang being the same as target lang: ${JSON.stringify(tlResult)}`);
+    updateEmptyTranslation(oldText, tlResult);
+    return false;
+  }
+  if (SOURCE_LANG && !detectedSourceLang.startsWith(SOURCE_LANG.substring(0, 2))) {
+    console.warn(COLORS.WARN, `Skipped due to source lang not matching desired source lang: ${JSON.stringify(tlResult)}`);
+    updateEmptyTranslation(oldText, tlResult);
+    return false;
+  }
+
+  // Validate translated text
+  if (!newText.length) {
+    console.warn(COLORS.WARN, `Skipped due to translation being empty: ${JSON.stringify(tlResult)}`);
+    updateEmptyTranslation(oldText, tlResult);
+    return false;
+  }
+  if (oldText === newText) {
+    console.warn(COLORS.WARN, `Skipped due to result being unchanged: ${newText}`);
+    updateEmptyTranslation(oldText, tlResult);
+    return false;
+  }
+  if (shouldTranslate(newText, false)) {
+    console.warn(COLORS.WARN, `Skipped due to result still containing untranslated characters: ${newText}`);
+    updateEmptyTranslation(oldText, tlResult);
+    return false;
+  }
+
+  return true;
+};
+
 async function getTranslator(): Promise<deepl.Translator> {
   try {
     const translator = new deepl.Translator(DEEPL_API_KEY);
@@ -144,17 +199,17 @@ async function getTranslator(): Promise<deepl.Translator> {
       return translator;
     }
 
-    console.error("\x1b[31m%s\x1b[0m", "Translation limit exceeded.");
+    console.error(COLORS.ERROR, "Translation limit exceeded.");
     if (usage.character) {
-      console.error("\x1b[31m%s\x1b[0m", `Characters: ${usage.character.count} of ${usage.character.limit}`);
+      console.error(COLORS.ERROR, `Characters: ${usage.character.count} of ${usage.character.limit}`);
     }
     if (usage.document) {
-      console.error("\x1b[31m%s\x1b[0m", `Documents: ${usage.document.count} of ${usage.document.limit}`);
+      console.error(COLORS.ERROR, `Documents: ${usage.document.count} of ${usage.document.limit}`);
     }
   } catch (e: unknown) {
     const error = e as Error;
-    console.error("\x1b[31m%s\x1b[0m", `Error initializing translator: ${error.message}`);
-    console.error("\x1b[31m%s\x1b[0m", "Please ensure you have provided a valid DEEPL_API_KEY in the .env file");
+    console.error(COLORS.ERROR, `Error initializing translator: ${error.message}`);
+    console.error(COLORS.ERROR, "Please ensure you have provided a valid DEEPL_API_KEY in the .env file");
   }
   Deno.exit(1);
 }
@@ -189,6 +244,11 @@ const main = async () => {
       }
     }
   }
+};
+
+const COLORS = {
+  WARN: "\x1b[33m%s\x1b[0m", // Yellow
+  ERROR: "\x1b[31m%s\x1b[0m", // Red
 };
 
 main();
