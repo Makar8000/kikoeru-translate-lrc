@@ -13,10 +13,15 @@ const EMPTY_PATH = Deno.env.get("EMPTY_PATH") ?? "./data/tlempty.json";
 const SOURCE_LANG = Deno.env.get("SOURCE_LANG") as deepl.SourceLanguageCode;
 const TARGET_LANG = Deno.env.get("TARGET_LANG") as deepl.TargetLanguageCode;
 const DEEPL_API_KEY = Deno.env.get("DEEPL_API_KEY") ?? "";
+
 const UNICODE_LANGUAGES = ["zh", "ja", "ko"];
 const UNICODE_REGEX = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
-const translator: deepl.Translator = await getTranslator();
+const COLORS = {
+  WARN: "\x1b[33m%s\x1b[0m", // Yellow
+  ERROR: "\x1b[31m%s\x1b[0m", // Red
+};
 
+const translator: deepl.Translator = await getTranslator();
 const tlCache = new Map<string, deepl.TextResult>(Object.entries(fs.existsSync(CACHE_PATH) ? JSON.parse(Deno.readTextFileSync(CACHE_PATH)) : {}));
 const tlEmpty = new Map<string, deepl.TextResult>();
 
@@ -211,6 +216,7 @@ async function getTranslator(): Promise<deepl.Translator> {
     console.error(COLORS.ERROR, `Error initializing translator: ${error.message}`);
     console.error(COLORS.ERROR, "Please ensure you have provided a valid DEEPL_API_KEY in the .env file");
   }
+  alert("\nPress Enter to close...");
   Deno.exit(1);
 }
 
@@ -244,11 +250,11 @@ const main = async () => {
       }
     }
   }
+
+  alert("\nFinished processing all files. Press Enter to close...");
 };
 
-const COLORS = {
-  WARN: "\x1b[33m%s\x1b[0m", // Yellow
-  ERROR: "\x1b[31m%s\x1b[0m", // Red
-};
-
-main();
+main().catch((error) => {
+  console.error(COLORS.ERROR, error);
+  alert("\nPress Enter to close...");
+});
