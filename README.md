@@ -33,7 +33,7 @@ This project requires [deno](https://deno.com/) to run.
 
 ### Tasks
 - `deno task translate` - The main task. Translates lyrics/subtitles as specified in this README.
-- `deno task translate-tlfix` - Useful for re-translating or fixing a cache file that may have been translated incorrectly. For example, if automatice language detection is enabled, but DeepL selected the wrong language. To use:
+- `deno task translate-tlfix` - Useful for re-translating or fixing a cache file that may have been translated incorrectly. For example, if automatic language detection is enabled, but DeepL selected the wrong language. To use:
   1) Copy the bad `data/tlcache.json` to `data/tlfix.json`
   2) Strip the file so that only the entries you want to retranslate are there
   3) Replace `detectedSourceLang` with the correct language code
