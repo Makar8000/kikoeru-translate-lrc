@@ -7,9 +7,7 @@ artifact
 release
 *.exe
 
+backup
+output
 queue/**
 !queue/**/.gitkeep
-backup/**
-!backup/**/.gitkeep
-output/**
-!output/**/.gitkeep
