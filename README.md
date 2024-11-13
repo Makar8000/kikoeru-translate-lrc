@@ -17,7 +17,7 @@ To adjust the configuration, you will need to create a `.env` file in the same d
 - `DEEPL_API_KEY` - **Required**. The DeepL API Key. Requires a DeepL account, but creating your own key is free. You can find more information [here](https://support.deepl.com/hc/en-us/articles/360020695820).
 - `SOURCE_LANG` - The source language code you want to translate from. If it is unknown or you would prefer to have DeepL auto-detect it, you can delete this entirely. See [this article](https://developers.deepl.com/docs/resources/supported-languages#source-languages) for a list of supported language codes.
 - `TARGET_LANG` - The target language code you want to translate to. Defaults to `en-US` if not provided. See [this article](https://developers.deepl.com/docs/resources/supported-languages#target-languages) for a list of supported language codes.
-- `RJ_PATH` - The location of the folder that contains all of your lyric/subtitle files. This path will be searched recursively. Defaults to `./queue` in the same directory if not provided.
+- `RJ_PATH` - The location of the folder that contains all of your lyric/subtitle files that need to be translated. This path will be searched recursively. Defaults to `./queue` in the same directory if not provided.
 - `BAK_PATH` - The location of the folder where you want a backup of your lyric/subtitle files to be stored. Defaults to `./backup` in the same directory if not provided.
 - `OUT_PATH` - The location of the folder where you want your translated lyric/subtitle files to be stored. The folder structure of the files will be the same structure as the `RJ_PATH` folder. Defaults to `./output` in the same directory if not provided.
 
