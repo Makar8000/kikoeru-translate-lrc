@@ -12,7 +12,7 @@ A tool that lets you translate various lyric files. Originally created for use w
 6) Translated files will be placed in the `output` folder by default
 
 ## Configuration
-To adjust the configuration, you will need to create a `.env` file in the same directory by creating a copy of the `.env.template` file.
+To adjust the configuration, you will need to create a `.env` file in the same directory by creating a copy of the `.env.example` file.
 
 - `DEEPL_API_KEY` - **Required**. The DeepL API Key. Requires a DeepL account, but creating your own key is free. You can find more information [here](https://support.deepl.com/hc/en-us/articles/360020695820).
 - `SOURCE_LANG` - The source language code you want to translate from. If it is unknown or you would prefer to have DeepL auto-detect it, you can delete this entirely. See [this article](https://developers.deepl.com/docs/resources/supported-languages#source-languages) for a list of supported language codes.
@@ -25,7 +25,7 @@ To adjust the configuration, you will need to create a `.env` file in the same d
 This project requires [deno](https://deno.com/) to run.
 
 1) `deno install`
-2) Copy `.env.template` to `.env`
+2) Copy `.env.example` to `.env`
 3) Edit `.env` and adjust settings as necessary. You will need to provide your own [DeepL API Key](https://support.deepl.com/hc/en-us/articles/360020695820)
    - See [Configuration](#configuration) for more details on the `.env` file
 4) Place your files/folders with untranslated subtitles in your `RJ_PATH` (queue) folder
