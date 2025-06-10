@@ -4,7 +4,7 @@ A tool that lets you translate various lyric files. Originally created for use w
 ## Usage
 1) Download the latest release from [here](https://github.com/Makar8000/kikoeru-translate-lrc/releases/latest) and extract it.
    - The correct file is named `translate-lrc.zip`.
-2) Open the `.env` file in notepad and adjust the settings as necessary. You will need to provide your own [DeepL API Key](https://support.deepl.com/hc/en-us/articles/360020695820)
+2) Open the `.env` file in notepad and adjust the settings as necessary.
    - See [Configuration](#configuration) for more details on the `.env` file
 3) Save your changes and close the file
 4) Place the files you want to translate in the `queue` folder (or whatever folder you set in the `.env` file)
