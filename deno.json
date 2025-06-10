@@ -1,8 +1,8 @@
 {
-  "version": "1.1.1",
+  "version": "1.2.0",
   "tasks": {
     "translate": "deno run -ENWRS src/translate.ts",
-    "tl-fix": "deno run -ENWRS src/translate-tlfix.ts",
+    "deepl-tlfix": "deno run -ENWRS src/deepl-tlfix.ts",
     "compile": "deno compile -ENWRS src/translate.ts"
   },
   "fmt": {
@@ -16,7 +16,7 @@
     "@std/dotenv": "jsr:@std/dotenv@^0.225.2",
     "@std/fs": "jsr:@std/fs@^1.0.4",
     "@std/path": "jsr:@std/path@^1.0.6",
-    "deepl-node": "npm:deepl-node@^1.14.0",
+    "deepl-node": "npm:deepl-node@^1.18.0",
     "subsrt-ts": "npm:subsrt-ts@^2.1.2"
   }
 }

@@ -5,7 +5,7 @@ import * as deepl from "deepl-node";
 
 const INPUT_PATH = Deno.env.get("TLFIX_PATH") ?? "./data/tlfix.json";
 const OUT_PATH = getOutputPath();
-const TARGET_LANG = Deno.env.get("TARGET_LANG") as deepl.TargetLanguageCode;
+const TARGET_LANG = Deno.env.get("DEEPL_TARGET_LANG") as deepl.TargetLanguageCode;
 const DEEPL_API_KEY = Deno.env.get("DEEPL_API_KEY") ?? "";
 const translator: deepl.Translator = await getTranslator();
 
