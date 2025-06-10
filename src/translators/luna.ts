@@ -13,17 +13,16 @@ class LunaTranslator implements Translator {
     try {
       const tlEndpoint = new URL("/api/list/translator", this.endpoint);
       const resp = await fetch(tlEndpoint);
-      const respJson = await resp.json();
-      if (!respJson.length) {
-        throw new Error("No supported langauges found");
+      const respJson: LunaResultTranslator[] = await resp.json();
+      if (!respJson?.length) {
+        throw new Error("No translators found");
       }
       if (!this.translator?.length) {
         this.initialized = true;
         return;
       }
 
-      // deno-lint-ignore no-explicit-any
-      const tl = respJson.find((t: any) => t.name?.toLowerCase() === this.translator.toLowerCase());
+      const tl = respJson.find((t) => t.name?.toLowerCase() === this.translator.toLowerCase());
       if (!tl?.id?.length) {
         throw new Error(
           `Invalid translator \"${this.translator}\". Please visit ${tlEndpoint.href} for a list of enabled translators. You must configure these yourself in LunaTranslator.`,
@@ -54,7 +53,7 @@ class LunaTranslator implements Translator {
           url.searchParams.set("id", this.translatorId);
         }
         const resp = await fetch(url);
-        const respJson = await resp.json();
+        const respJson: LunaResult = await resp.json();
         const result: TLResult = {
           text: respJson?.result?.trim() ?? "",
           translator: this.code,
@@ -71,5 +70,14 @@ class LunaTranslator implements Translator {
     return results;
   }
 }
+
+type LunaResultTranslator = {
+  id: string;
+  name: string;
+};
+
+type LunaResult = {
+  result: string;
+};
 
 export default LunaTranslator;

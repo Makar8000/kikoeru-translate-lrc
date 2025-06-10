@@ -13,8 +13,8 @@ class LibreTranslator implements Translator {
     try {
       const langEndpoint = new URL("/languages", this.endpoint);
       const resp = await fetch(langEndpoint);
-      const respJson = await resp.json();
-      if (!respJson.length) {
+      const respJson: LibreLanguage[] = await resp.json();
+      if (!respJson?.length) {
         throw new Error("No supported langauges found");
       }
       if (this.sourceLang === "auto") {
@@ -22,8 +22,7 @@ class LibreTranslator implements Translator {
         return;
       }
 
-      // deno-lint-ignore no-explicit-any
-      const source = respJson.find((l: any) => l.code?.toLowerCase() === this.sourceLang.toLowerCase());
+      const source = respJson.find((l) => l.code?.toLowerCase() === this.sourceLang.toLowerCase());
       if (!source?.targets?.length) {
         throw new Error(`Invalid source language \"${this.sourceLang}\"`);
       }
@@ -61,7 +60,10 @@ class LibreTranslator implements Translator {
             target: this.targetLang,
           }),
         });
-        const respJson = await resp.json();
+        const respJson: LibreResult = await resp.json();
+        if (respJson.error?.length) {
+          throw new Error(respJson.error);
+        }
         const result: TLResult = {
           text: respJson?.translatedText?.trim() ?? "",
           translator: this.code,
@@ -78,5 +80,16 @@ class LibreTranslator implements Translator {
     return results;
   }
 }
+
+type LibreLanguage = {
+  code: string;
+  name: string;
+  targets: string[];
+};
+
+type LibreResult = {
+  translatedText: string;
+  error?: string;
+};
 
 export default LibreTranslator;

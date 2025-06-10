@@ -1,5 +1,5 @@
 import type { ContentCaption } from "subsrt-ts/dist/types/handler.js";
-import { SourceLanguageCode, TargetLanguageCode, TextResult } from "deepl-node";
+import { SourceLanguageCode, TargetLanguageCode } from "deepl-node";
 
 export const COLORS = {
   WARN: "\x1b[33m%s\x1b[0m", // Yellow
@@ -28,14 +28,6 @@ export type TLResult = {
   text: string;
   translator: TranslatorCode;
   detectedSourceLang?: SourceLanguageCode;
-};
-
-export type DeepLResult = TextResult;
-export type LibreResult = {
-  translatedText: string;
-};
-export type LunaResult = {
-  result: string;
 };
 
 export interface Translator {
