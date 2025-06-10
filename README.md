@@ -32,7 +32,7 @@ These configuration items only apply if your `TRANSLATOR` is set to `DEEPL`:
 ### LibreTranslate-specific config
 These configuration items only apply if your `TRANSLATOR` is set to `LIBRE`:
 - `LIBRE_ENDPOINT` - The endpoint which is hosting your LibreTranslate instance.
-- `LIBRE_SOURCE_LANG` - The source language code you want to translate from. If it is unknown or you would prefer to have DeepL auto-detect it, you can delete this entirely. See [this page](https://libretranslate.com/languages) for a list of supported language codes.
+- `LIBRE_SOURCE_LANG` - The source language code you want to translate from. If it is unknown or you would prefer to have it auto-detected, you can delete this entirely. See [this page](https://libretranslate.com/languages) for a list of supported language codes.
 - `LIBRE_TARGET_LANG` - The target language code you want to translate to. Defaults to `en` if not provided. See [this page](https://libretranslate.com/languages) for a list of supported language codes.
 
 ### LunaTranslator-specific config
@@ -52,7 +52,7 @@ This project requires [deno](https://deno.com/) to run.
 
 ### Tasks
 - `deno task translate` - The main task. Translates lyrics/subtitles as specified in this README.
-- `deno task deepl-tlfix` - Useful for re-translating or fixing a cache file that may have been translated incorrectlyby DeepL. For example, if automatic language detection is enabled, but DeepL selected the wrong language. To use:
+- `deno task deepl-tlfix` - Useful for re-translating or fixing a cache file that may have been translated incorrectly by DeepL. For example, if automatic language detection is enabled, but DeepL selected the wrong language. To use:
   1) Copy the bad `data/tlcache.json` to `data/tlfix.json`
   2) Strip the file so that only the entries you want to retranslate are there
   3) Replace `detectedSourceLang` with the correct language code
