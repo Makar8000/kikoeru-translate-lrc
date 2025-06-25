@@ -72,7 +72,7 @@ const translateCaptions = async (captions: TLCaption[]): Promise<TLCaption[]> =>
 const translateFile = async (file: string): Promise<void> => {
   // Read file contents
   logger.info(`\nReading ${file}`);
-  const content = Deno.readTextFileSync(path.join(RJ_PATH, file));
+  const content = Deno.readTextFileSync(path.join(RJ_PATH, file)).trim();
   const format = path.extname(file).substring(1);
   const srtData: TLCaption[] = subsrt.parse(content, { format, verbose: true }).map((caption) => {
     const tlCaption = caption as TLCaption;
