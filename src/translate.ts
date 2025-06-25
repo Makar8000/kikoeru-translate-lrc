@@ -10,6 +10,7 @@ import LunaTranslator from "./translators/luna.ts";
 const RJ_PATH = Deno.env.get("RJ_PATH") ?? "./queue";
 const BAK_PATH = Deno.env.get("BAK_PATH") ?? "./backup";
 const OUT_PATH = Deno.env.get("OUT_PATH") ?? "./output";
+const DICTIONARY_FILE = Deno.env.get("DICTIONARY_FILE") ?? "./data/dictionary.csv";
 const CACHE_PATH = Deno.env.get("CACHE_PATH") ?? "./data/tlcache.json";
 const EMPTY_PATH = Deno.env.get("EMPTY_PATH") ?? "./data/tlempty.json";
 const TRANSLATOR: TranslatorCode = (Deno.env.get("TRANSLATOR") ?? "DEEPL") as TranslatorCode;
@@ -20,6 +21,7 @@ const UNICODE_REGEX = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff
 const translator: Translator = await getTranslator();
 const tlCache = new Map<string, TLResult>(Object.entries(fs.existsSync(CACHE_PATH) ? JSON.parse(Deno.readTextFileSync(CACHE_PATH)) : {}));
 const tlEmpty = new Map<string, TLResult>();
+const dictionary = getDictionary();
 
 const translateCaptions = async (captions: TLCaption[]): Promise<TLCaption[]> => {
   const toTranslate = captions.filter((c) => c.source === "untranslated");
@@ -43,7 +45,7 @@ const translateCaptions = async (captions: TLCaption[]): Promise<TLCaption[]> =>
       tlCache.set(oldText, tlResult);
 
       toTranslate[idx].source = "translated";
-      toTranslate[idx].text = tlResult.text;
+      toTranslate[idx].text = applyDictionary(tlResult.text);
       toTranslate[idx].modified = true;
       toTranslate[idx].translator = tlResult.translator;
       if (tlResult.detectedSourceLang) {
@@ -213,6 +215,31 @@ async function getTranslator(): Promise<Translator> {
   }
   await tl.init();
   return tl;
+}
+
+function getDictionary(): Map<string, string> {
+  const dict = new Map<string, string>();
+  if (!fs.existsSync(DICTIONARY_FILE)) {
+    return dict;
+  }
+  Deno.readTextFileSync(DICTIONARY_FILE).split("\n").forEach((line) => {
+    const content = line.trim().split(",").map((w) => w.trim());
+    if (content.length === 2) {
+      dict.set(content[0], content[1]);
+    }
+  });
+  return dict;
+}
+
+function applyDictionary(text: string): string {
+  let ret = `${text}`;
+  dictionary.keys().forEach((key) => {
+    const value = dictionary.get(key);
+    if (ret.includes(key) && typeof value === "string") {
+      ret = ret.replaceAll(key, value);
+    }
+  });
+  return ret;
 }
 
 const main = async () => {
