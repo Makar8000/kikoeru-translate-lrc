@@ -3,6 +3,7 @@ import * as fs from "@std/fs";
 import * as path from "@std/path";
 import subsrt from "subsrt-ts";
 import { logger, TLCaption, TLResult, Translator, TranslatorCode } from "./common.ts";
+import LLMTranslator from "./translators/openai.ts";
 import DeepLTranslator from "./translators/deepl.ts";
 import LibreTranslator from "./translators/libre.ts";
 import LunaTranslator from "./translators/luna.ts";
@@ -16,7 +17,7 @@ const EMPTY_PATH = Deno.env.get("EMPTY_PATH") ?? "./data/tlempty.json";
 const TRANSLATOR: TranslatorCode = (Deno.env.get("TRANSLATOR") ?? "DEEPL") as TranslatorCode;
 
 const UNICODE_LANGUAGES = ["zh", "ja", "ko"];
-const UNICODE_REGEX = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
+const UNICODE_REGEX = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}\p{Script=Hangul}\uff66-\uff9f]/u;
 
 const translator: Translator = await getTranslator();
 const tlCache = new Map<string, TLResult>(Object.entries(fs.existsSync(CACHE_PATH) ? JSON.parse(Deno.readTextFileSync(CACHE_PATH)) : {}));
@@ -195,6 +196,10 @@ const validateTranslation = (oldText: string, tlResult: TLResult): boolean => {
 async function getTranslator(): Promise<Translator> {
   let tl: Translator;
   switch (TRANSLATOR) {
+    case "LLM": {
+      tl = new LLMTranslator();
+      break;
+    }
     case "DEEPL": {
       tl = new DeepLTranslator();
       break;

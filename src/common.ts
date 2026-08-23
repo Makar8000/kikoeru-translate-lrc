@@ -15,7 +15,7 @@ export const logger = {
   error: (...args: any[]) => console.error(COLORS.ERROR, ...args),
 };
 
-export type TranslatorCode = "DEEPL" | "LIBRE" | "LUNA";
+export type TranslatorCode = "LLM" | "DEEPL" | "LIBRE" | "LUNA";
 
 export interface TLCaption extends ContentCaption {
   source?: "cache" | "translated" | "untranslated";

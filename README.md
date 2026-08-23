@@ -16,12 +16,26 @@ To adjust the configuration, you will need to create a `.env` file in the same d
 
 ### Common config
 - `TRANSLATOR` - The translation method to use. The available options are:
+  - `LLM` - For any OpenAI API-compatible endpoint. Examples include OpenRouter, llama.cpp, Ollama, LMStudio, etc.
   - `DEEPL` - For [DeepL](https://www.deepl.com/)
   - `LIBRE` - For [LibreTranslate](https://github.com/LibreTranslate/LibreTranslate)
   - `LUNA` - For [LunaTranslator](https://lunatranslator.org/)
 - `RJ_PATH` - The location of the folder that contains all of your lyric/subtitle files that need to be translated. This path will be searched recursively. Defaults to `./queue` in the same directory if not provided.
 - `BAK_PATH` - The location of the folder where you want a backup of your lyric/subtitle files to be stored. Defaults to `./backup` in the same directory if not provided.
 - `OUT_PATH` - The location of the folder where you want your translated lyric/subtitle files to be stored. The folder structure of the files will be the same structure as the `RJ_PATH` folder. Defaults to `./output` in the same directory if not provided.
+
+### LLM-specific config
+These configuration items only apply if your `TRANSLATOR` is set to `LLM`:
+- `LLM_ENDPOINT` - **Required**. The Chat Completions URL. Must be OpenAI API-compatible.
+- `LLM_API_KEY` - The API Key or other Bearer auth token to used for authenticaing with the LLM service. Can be removed if you are running an LLM locally.
+- `LLM_MODEL` - The model to use for the translation. If this is not included, it will used the already-loaded model (local-only).
+
+You can also override the parameters used for the LLM:
+- `LLM_PARAM_PROMPT` - The system prompt to use for the translation. To improve accuracy, your system prompt should include the desired source and target language.
+- `LLM_PARAM_TEMPERATURE` - Temperature
+- `LLM_PARAM_TOP_P` - Top-P
+- `LLM_PARAM_TOP_K` - Top-K
+- `LLM_PARAM_REPETITION_PENALTY` - Repetition Penalty
 
 ### DeepL-specific config
 These configuration items only apply if your `TRANSLATOR` is set to `DEEPL`:
