@@ -1,3 +1,10 @@
+> [!WARNING]
+> This repository is now read-only and has been superseded by its successor, **[seconv-kikoeru](https://github.com/Makar8000/seconv-kikoeru)**
+>
+> Please visit the new project for continued development and updates.
+
+---
+
 # kikoeru-translate-lrc
 A tool that lets you translate various lyric files. Originally created for use with Kikoeru but adjusted to work with any folder structure.
 
